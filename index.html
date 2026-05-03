@@ -13,8 +13,6 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .product-scroll::-webkit-scrollbar { width: 6px; }
         .product-scroll::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 10px; }
-        
-        /* History Section Font Adjustments */
         .history-text-main { font-size: 1.05rem; } 
         .history-product-title { font-size: 0.95rem; letter-spacing: 0.025em; }
     </style>
@@ -54,8 +52,7 @@
                                 <th class="px-6 py-3 text-right">Action</th>
                             </tr>
                         </thead>
-                        <tbody id="inventory-table" class="divide-y divide-slate-100 cursor-pointer text-sm">
-                        </tbody>
+                        <tbody id="inventory-table" class="divide-y divide-slate-100 cursor-pointer text-sm"></tbody>
                     </table>
                 </div>
             </section>
@@ -64,9 +61,7 @@
                 <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Instruction History</h3>
                 <span id="history-count" class="text-xs bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-black">0 Entries</span>
             </div>
-            
-            <div id="instruction-log" class="space-y-4 px-1 pb-10">
-                </div>
+            <div id="instruction-log" class="space-y-4 px-1 pb-10"></div>
         </main>
     </div>
 
@@ -77,34 +72,31 @@
                     <i class="fas fa-check text-4xl"></i>
                 </div>
                 <h2 class="text-3xl font-black text-slate-800 tracking-tighter uppercase">Dispatched</h2>
-                <p class="text-slate-400 font-medium">Order successfully sent to staff</p>
+                <p class="text-slate-400 font-medium">Order live on all devices</p>
             </div>
-
             <div class="bg-slate-50 rounded-3xl p-8 border border-slate-200 shadow-sm mb-10">
                 <div class="grid grid-cols-2 gap-4 mb-6">
                     <div>
-                        <label class="text-[10px] font-black text-indigo-600 uppercase tracking-widest block mb-1">Product Name</label>
+                        <label class="text-[10px] font-black text-indigo-600 uppercase tracking-widest block mb-1">Product</label>
                         <p id="target-prod" class="text-xl font-bold text-slate-800 uppercase"></p>
                     </div>
                     <div class="text-right">
                         <label class="text-[10px] font-black text-indigo-600 uppercase tracking-widest block mb-1">Qty</label>
-                        <input type="number" id="target-qty" class="text-xl font-black text-slate-800 bg-transparent border-b-2 border-indigo-200 w-16 text-right focus:border-indigo-500 outline-none">
+                        <input type="number" id="target-qty" class="text-xl font-black text-slate-800 bg-transparent border-b-2 border-indigo-200 w-16 text-right outline-none">
                     </div>
                 </div>
-
                 <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Instruction Details</label>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Instructions</label>
                     <div class="bg-white p-4 rounded-xl border border-slate-200 italic text-slate-600 shadow-sm">
                         "<span id="target-msg"></span>"
                     </div>
                 </div>
             </div>
-
             <div class="flex flex-col items-center">
                 <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mb-3">
-                    <div id="progress-bar" class="bg-indigo-600 h-full w-0 transition-all duration-[3000ms] ease-linear"></div>
+                    <div id="progress-bar" class="bg-indigo-600 h-full w-0 transition-all duration-[2000ms] ease-linear"></div>
                 </div>
-                <p class="text-[10px] font-black text-slate-400 tracking-widest animate-pulse uppercase">Syncing to Staff Handhelds...</p>
+                <p class="text-[10px] font-black text-slate-400 tracking-widest animate-pulse uppercase">Syncing Cloud Database...</p>
             </div>
         </div>
     </div>
@@ -112,55 +104,86 @@
     <div id="focus-modal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden">
             <div class="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50">
-                <div>
-                    <h2 id="m-name" class="text-lg font-bold text-slate-800 uppercase leading-tight"></h2>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Enter current stock & task</p>
-                </div>
+                <h2 id="m-name" class="text-lg font-bold text-slate-800 uppercase leading-tight"></h2>
                 <button onclick="closeModal()" class="text-slate-300 hover:text-slate-800 text-2xl transition">&times;</button>
             </div>
             <div class="p-6">
                 <div class="mb-4">
-                    <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block">Product Quantity</label>
+                    <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block">Quantity</label>
                     <input type="number" id="m-qty" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-mono font-bold text-lg" value="0">
                 </div>
-                <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block">Staff Instruction</label>
-                    <textarea id="m-task" rows="3" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm transition-all" placeholder="E.g. Clean the shelf..."></textarea>
+                <div class="mb-4">
+                    <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block">Task</label>
+                    <textarea id="m-task" rows="3" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm transition-all"></textarea>
                 </div>
-                <button id="dispatch-btn" class="w-full mt-4 py-4 bg-indigo-900 text-white font-bold rounded-xl hover:bg-black shadow-lg shadow-indigo-100 transition-all active:scale-95">
-                    SEND ORDER
-                </button>
+                <button id="dispatch-btn" class="w-full py-4 bg-indigo-900 text-white font-bold rounded-xl hover:bg-black transition-all">SEND ORDER</button>
             </div>
         </div>
     </div>
 
-    <script>
-        const productNames = ["SILK SAREES", "SAREE", "FANCY SAREE", "COTTON SAREE", "BLOUSE", "BLOUSE BIT", "LINING CLOTH", "LINING BIT", "INSKIRT", "CHUDITHAR", "CHUDITHAR MATERIAL", "FROCK", "MIDI", "GOWN", "WESTERN", "TOPS", "LEGGINGS", "SHAAL", "NIGHTY", "NIGHT SUIT", "NIGHT DRESS", "BRA", "CHIMMIES", "PANTIES", "TIGHTS", "PETTICOAT", "JETTY", "GIFT BOX", "BABY DRESS", "BABY TOWEL", "PILLAIYAR PARIVATTAM", "AMMAN PATTU", "KAVI DHOTI", "BABA SUIT", "TROUSER SHIRT", "BOYS PANT SHIRT", "BOYS SHIRT", "BOYS JEANS PANT", "GENTS SHIRT", "GENTS PANT", "GENTS JEANS PANT", "SHIRTTING", "SUITTING", "SHIRTTING BIT", "SUITTING BIT", "WEDDING DHOTIS SHIRT", "BOYS DHOTIS SHIRT", "DHOTI", "LUNGI", "TOWEL", "SALVAI", "BRIEF", "BANIAN", "TRUNKS", "TRACK SUIT", "PANT 3/4", "SOCKS", "SHORTS", "GLOVES", "BED SHEET", "BED COVER", "PILLOW", "PILLOW COVER", "MAT", "PAAI", "MULL", "KAADA", "KERCHIEF", "CAP", "SAREE FALLS", "BANIAN SET", "BOYS COAT SUIT", "PATTU PAVADAI SET", "DOOR SCREEN", "WINDOW SCREEN", "T-SHIRT", "YOGA SHORTS", "SPORTS BRA", "PATIALA", "PATTU SAREE", "KERALA FANCY SAREE", "STONE WORK SAREE", "NIGHTY MATERIAL", "PANT SET", "SWEATER", "KERALA DHOTHI", "JAMMUKALAM", "BABY BED", "SCREEN PIECE", "NAVAKARAGA PATTU", "PATTI INSKIRT", "MASK", "MOSQUITO NET", "BED", "DHOTIS SET", "GYM VESTS", "RAIN COAT", "PANI KULLA", "TEA CLOTH", "NARIYAL", "IRUMUDI BAG", "DHAVANI", "LEHANGA", "JERKIN", "SKIRT", "PLAZO", "SHAPE WEAR", "JEGGINGS", "TABLE CLOTH", "JOGGERS", "BOYS PANT", "SHOE", "DENIM SHORTS", "DHOTI BELT", "POPLIN CLOTH", "SOFA COVER", "GENTS COAT", "CHRISTMAS DRESS", "CHRISTMAS CAP", "BOTTLE COVER", "SHIMMER", "BED PAAI", "KRISHNA DRESS", "LAB COAT", "BUTTERFLY WINGS", "MATERNITY WEAR", "SPIDERMAN DRESS", "DRY SHEET"];
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // All quantities set to 0 default
+        const firebaseConfig = {
+            apiKey: "AIzaSyCHliRNg2X7_g66eF6EFGSp1MAVGFwA9K0",
+            authDomain: "saaralstock-2d04b.firebaseapp.com",
+            databaseURL: "https://saaralstock-2d04b-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "saaralstock-2d04b",
+            storageBucket: "saaralstock-2d04b.firebasestorage.app",
+            messagingSenderId: "437121386362",
+            appId: "1:437121386362:web:ff289ff34ea2f3c8e9b8c3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const historyCol = collection(db, "saaralHistory");
+
+        const productNames = ["SILK SAREES", "SAREE", "FANCY SAREE", "COTTON SAREE", "BLOUSE", "BLOUSE BIT", "LINING CLOTH", "LINING BIT", "INSKIRT", "CHUDITHAR", "CHUDITHAR MATERIAL", "FROCK", "MIDI", "GOWN", "WESTERN", "TOPS", "LEGGINGS", "SHAAL", "NIGHTY", "NIGHT SUIT", "NIGHT DRESS", "BRA", "CHIMMIES", "PANTIES", "TIGHTS", "PETTICOAT", "JETTY", "GIFT BOX", "BABY DRESS", "BABY TOWEL", "PILLAIYAR PARIVATTAM", "AMMAN PATTU", "KAVI DHOTI", "BABA SUIT", "TROUSER SHIRT", "BOYS PANT SHIRT", "BOYS SHIRT", "BOYS JEANS PANT", "GENTS SHIRT", "GENTS PANT", "GENTS JEANS PANT", "SHIRTTING", "SUITTING", "SHIRTTING BIT", "SUITTING BIT", "WEDDING DHOTIS SHIRT", "BOYS DHOTIS SHIRT", "DHOTI", "LUNGI", "TOWEL", "SALVAI", "BRIEF", "BANIAN", "TRUNKS", "TRACK SUIT", "PANT 3/4", "SOCKS", "SHORTS", "GLOVES", "BED SHEET", "BED COVER", "PILLOW", "PILLOW COVER", "MAT", "PAAI", "MULL", "KAADA", "KERCHIEF", "CAP", "SAREE FALLS", "BANIAN SET", "BOYS COAT SUIT", "PATTU PAVADAI SET", "DOOR SCREEN", "WINDOW SCREEN", "T-SHIRT", "YOGA SHORTS", "SPORTS BRA", "PATIALA", "PATTU SAREE", "KERALA FANCY SAREE", "STONE WORK SAREE", "NIGHTY MATERIAL", "PANT SET", "SWEATER", "KERALA DHOTHI", "JAMMUKALAM", "BABY BED", "SCREEN PIECE", "NAVAKARAGA PATTU", "PATTI INSKIRT", "MASK", "MOSQUITO NET", "BED", "DHOTIS SET", "GYM VESTS", "RAIN COAT", "PANI KULLA", "TEA CLOTH", "NARIYAL", "IRUMUDI BAG", "DHAVANI", "LEHANGA", "JERKIN", "SKIRT", "PLAZO", "SHAPE WEAR", "JEGGINGS", "TABLE CLOTH", "JOGGERS", "BOYS PANT", "SHOE", "DENIM SHORTS", "DHOTI BELT", "POPLIN CLOTH", "SOFA COVER", "GENTS COAT", "CHRISTMAS DRESS", "CHRISTMAS CAP", "BOTTLE COVER", "SHIMMER", "BED PAAI", "KRISHNA DRESS", "LAB COAT", "BUTTERFLY WINGS", "MATERNITY WEAR", "SPIDERMAN DRESS", "DRY SHEET"];
         let products = productNames.map((name, i) => ({ id: i, name: name, stock: 0 }));
         let activeProduct = null;
-        let historyData = [];
 
-        function startClock() {
-            const timeEl = document.getElementById('header-time');
-            const dateEl = document.getElementById('header-date');
-            setInterval(() => {
-                const now = new Date();
-                timeEl.innerText = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-                dateEl.innerText = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-            }, 1000);
-        }
+        // Clock
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('header-time').innerText = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+            document.getElementById('header-date').innerText = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        }, 1000);
 
-        function updateTable(query = "") {
+        // Real-time listener
+        const q = query(historyCol, orderBy("timestamp", "desc"));
+        onSnapshot(q, (snapshot) => {
+            const log = document.getElementById('instruction-log');
+            document.getElementById('history-count').innerText = `${snapshot.size} Entries`;
+            log.innerHTML = "";
+            snapshot.forEach((docSnap) => {
+                const item = docSnap.data();
+                const id = docSnap.id;
+                const entry = document.createElement('div');
+                entry.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center";
+                entry.innerHTML = `
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-1">
+                            <span class="history-product-title font-black text-indigo-700 uppercase">${item.product} <span class="text-slate-400">(QTY: ${item.qty})</span></span>
+                            <span class="text-[10px] font-bold text-slate-400 font-mono">${item.time}</span>
+                        </div>
+                        <p class="history-text-main font-semibold text-slate-800 leading-relaxed">${item.instruction}</p>
+                    </div>
+                    <div class="flex gap-2 ml-4">
+                        <button onclick="window.editCloudEntry('${id}', '${item.instruction}')" class="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-50 text-blue-600"><i class="fas fa-pencil-alt"></i></button>
+                        <button onclick="window.deleteCloudEntry('${id}')" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600"><i class="fas fa-trash-alt"></i></button>
+                    </div>`;
+                log.appendChild(entry);
+            });
+        });
+
+        window.updateTable = (queryStr = "") => {
             const table = document.getElementById('inventory-table');
             table.innerHTML = "";
-            products.filter(p => p.name.toLowerCase().includes(query.toLowerCase())).forEach(p => {
+            products.filter(p => p.name.toLowerCase().includes(queryStr.toLowerCase())).forEach(p => {
                 const row = document.createElement('tr');
-                row.className = "hover:bg-slate-50 group border-b border-slate-50";
-                row.innerHTML = `<td class="px-6 py-4 font-semibold text-slate-700 uppercase">${p.name}</td>
-                                 <td class="px-6 py-4 text-center font-mono font-bold">${p.stock}</td>
-                                 <td class="px-6 py-4 text-right"><button class="text-[10px] font-bold bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition uppercase">Dispatch</button></td>`;
+                row.className = "hover:bg-slate-50 border-b border-slate-50";
+                row.innerHTML = `<td class="px-6 py-4 font-semibold text-slate-700 uppercase">${p.name}</td><td class="px-6 py-4 text-center font-mono font-bold">${p.stock}</td><td class="px-6 py-4 text-right"><button class="text-[10px] font-bold bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg">Dispatch</button></td>`;
                 row.onclick = () => {
                     activeProduct = p;
                     document.getElementById('m-name').innerText = p.name;
@@ -169,76 +192,36 @@
                 };
                 table.appendChild(row);
             });
-        }
+        };
 
-        function closeModal() { document.getElementById('focus-modal').classList.remove('modal-active'); }
-
-        document.getElementById('dispatch-btn').onclick = () => {
+        document.getElementById('dispatch-btn').onclick = async () => {
             const task = document.getElementById('m-task').value;
             const newQty = document.getElementById('m-qty').value;
-            if(!task) return alert("Please enter an instruction.");
-            
-            activeProduct.stock = parseInt(newQty);
+            if(!task) return alert("Enter task");
             const timeNow = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-            
+            await addDoc(historyCol, { product: activeProduct.name, qty: newQty, instruction: task, time: timeNow, timestamp: Date.now() });
+            activeProduct.stock = newQty;
             document.getElementById('target-prod').innerText = activeProduct.name;
-            document.getElementById('target-qty').value = activeProduct.stock;
+            document.getElementById('target-qty').value = newQty;
             document.getElementById('target-msg').innerText = task;
-            
-            closeModal();
+            document.getElementById('focus-modal').classList.remove('modal-active');
             document.getElementById('main-dashboard').classList.add('hidden-page');
             document.getElementById('success-screen').classList.remove('hidden-page');
-            
-            document.getElementById('progress-bar').style.width = '0%';
             setTimeout(() => { document.getElementById('progress-bar').style.width = '100%'; }, 50);
-
             setTimeout(() => {
-                const finalQty = document.getElementById('target-qty').value;
-                activeProduct.stock = parseInt(finalQty);
-
-                historyData.unshift({ id: Date.now(), product: activeProduct.name, instruction: task, time: timeNow, qty: finalQty });
                 document.getElementById('success-screen').classList.add('hidden-page');
                 document.getElementById('main-dashboard').classList.remove('hidden-page');
+                document.getElementById('progress-bar').style.width = '0%';
                 document.getElementById('m-task').value = "";
-                updateTable();
-                renderHistory();
-            }, 3000);
+                window.updateTable();
+            }, 2500);
         };
 
-        function renderHistory() {
-            const log = document.getElementById('instruction-log');
-            document.getElementById('history-count').innerText = `${historyData.length} Entries`;
-            log.innerHTML = historyData.length ? "" : `<div class="text-center py-6 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 text-sm italic">No instructions issued yet.</div>`;
-            
-            historyData.forEach(item => {
-                const entry = document.createElement('div');
-                entry.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center";
-                entry.innerHTML = `<div class="flex-1">
-                                    <div class="flex items-center gap-3 mb-1">
-                                        <span class="history-product-title font-black text-indigo-700 uppercase">${item.product} <span class="text-slate-400">(QTY: ${item.qty})</span></span>
-                                        <span class="text-[10px] font-bold text-slate-400 font-mono">${item.time}</span>
-                                    </div>
-                                    <p class="history-text-main font-semibold text-slate-800 leading-relaxed">${item.instruction}</p>
-                                  </div>
-                                  <div class="flex gap-2 ml-4">
-                                    <button onclick="editEntry(${item.id})" class="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition"><i class="fas fa-pencil-alt"></i></button>
-                                    <button onclick="deleteEntry(${item.id})" class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition"><i class="fas fa-trash-alt"></i></button>
-                                  </div>`;
-                log.appendChild(entry);
-            });
-        }
-
-        window.deleteEntry = (id) => { if(confirm("Are you sure?")) { historyData = historyData.filter(i => i.id !== id); renderHistory(); } };
-        window.editEntry = (id) => {
-            const item = historyData.find(i => i.id === id);
-            const newT = prompt("Edit Instruction:", item.instruction);
-            if(newT) { item.instruction = newT; renderHistory(); }
-        };
-
-        document.getElementById('search-input').oninput = (e) => updateTable(e.target.value);
-        startClock();
-        updateTable();
-        renderHistory();
+        window.deleteCloudEntry = async (id) => { if(confirm("Delete everywhere?")) await deleteDoc(doc(db, "saaralHistory", id)); };
+        window.editCloudEntry = async (id, oldText) => { const newT = prompt("Edit Instruction:", oldText); if(newT) await updateDoc(doc(db, "saaralHistory", id), { instruction: newT }); };
+        window.closeModal = () => { document.getElementById('focus-modal').classList.remove('modal-active'); };
+        document.getElementById('search-input').oninput = (e) => window.updateTable(e.target.value);
+        window.updateTable();
     </script>
 </body>
 </html>
