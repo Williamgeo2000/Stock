@@ -7,12 +7,22 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+
         .modal-active { display: flex !important; }
         .hidden-page { display: none !important; }
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-        #sidebar { transition: transform 0.3s ease-in-out; transform: translateX(-100%); }
+        #sidebar { 
+            transition: transform 0.3s ease-in-out; 
+            transform: translateX(-100%); 
+            overscroll-behavior: contain;
+        }
         #sidebar.open { transform: translateX(0); }
 
         .confirm-popup {
@@ -26,6 +36,7 @@
         }
         @keyframes scaleUp { from { transform: scale(0); } to { transform: scale(1); } }
 
+        .product-scroll { -webkit-overflow-scrolling: touch; }
         .product-scroll::-webkit-scrollbar { width: 4px; }
         .product-scroll::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 10px; }
         
@@ -36,12 +47,12 @@
         .instruction-text { font-size: 0.85rem; font-weight: 600; line-height: 1.4; }
     </style>
 </head>
-<body class="bg-slate-50 font-sans text-slate-900 overflow-x-hidden touch-none">
+<body class="bg-slate-50 font-sans text-slate-900">
 
     <div id="confirm-animation" class="confirm-popup">
         <div class="text-center">
             <div class="checkmark-circle mx-auto mb-4"><i class="fas fa-check text-white text-4xl"></i></div>
-            <h2 class="text-white text-xl font-black uppercase tracking-widest">Updated</h2>
+            <h2 class="text-white text-xl font-black uppercase tracking-widest">Work Assigned</h2>
         </div>
     </div>
 
@@ -61,14 +72,14 @@
         </nav>
     </div>
 
-    <div id="app-container">
+    <div id="app-container" class="min-h-screen flex flex-col">
         <nav class="bg-indigo-950 text-white p-4 sticky top-0 z-40 shadow-lg">
             <div class="container mx-auto flex justify-between items-center">
                 <div class="flex items-center gap-4">
                     <button onclick="toggleSidebar()" class="p-2 text-xl hover:bg-white/10 rounded-lg transition-all">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <h1 class="text-lg font-black tracking-widest uppercase italic leading-none">Saaral Stock Management</h1>
+                    <h1 class="text-lg font-black tracking-widest uppercase italic leading-none text-white">Saaral Stock Management</h1>
                 </div>
                 <div class="text-right flex items-center gap-4">
                     <div class="date-container border-r border-white/10 pr-4">
@@ -80,7 +91,7 @@
             </div>
         </nav>
 
-        <main id="view-dispatch" class="container mx-auto p-4 lg:p-6 max-w-2xl">
+        <main id="view-dispatch" class="container mx-auto p-4 lg:p-6 max-w-2xl flex-1">
             <section class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden mb-10">
                 <div class="p-4 bg-slate-50 border-b border-slate-100">
                     <div class="relative">
@@ -88,7 +99,7 @@
                         <i class="fas fa-search absolute left-4 top-3.5 text-slate-400"></i>
                     </div>
                 </div>
-                <div class="overflow-x-auto max-h-[450px] product-scroll">
+                <div class="overflow-x-auto max-h-[400px] product-scroll overflow-y-auto">
                     <table class="w-full text-left">
                         <tbody id="inventory-table" class="divide-y divide-slate-50"></tbody>
                     </table>
@@ -101,7 +112,7 @@
             </div>
         </main>
 
-        <main id="view-staff" class="container mx-auto p-4 lg:p-6 max-w-xl hidden">
+        <main id="view-staff" class="container mx-auto p-4 lg:p-6 max-w-xl hidden flex-1">
             <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 mb-6 text-center">
                 <h3 class="font-black uppercase text-[10px] mb-4 tracking-widest text-indigo-600">Add Staff Member</h3>
                 <div class="flex gap-2">
@@ -132,7 +143,7 @@
                     <label class="text-[9px] font-black text-slate-400 uppercase mb-1 block tracking-widest">Instruction</label>
                     <textarea id="m-task" rows="2" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs" placeholder="Optional notes..."></textarea>
                 </div>
-                <button id="dispatch-btn" class="w-full py-5 bg-indigo-600 text-white font-black rounded-2xl shadow-lg uppercase tracking-[0.2em] text-xs">Confirm</button>
+                <button id="dispatch-btn" class="w-full py-5 bg-indigo-600 text-white font-black rounded-2xl shadow-lg uppercase tracking-[0.2em] text-xs">Confirm Dispatch</button>
             </div>
         </div>
     </div>
@@ -159,6 +170,7 @@
             document.getElementById('view-staff').classList.toggle('hidden', tab !== 'staff');
             toggleSidebar();
             if(tab === 'staff') renderStaff();
+            window.scrollTo(0,0);
         }
 
         function addStaff() {
@@ -195,19 +207,18 @@
         }
 
         document.getElementById('dispatch-btn').onclick = () => {
-            const qty = parseInt(document.getElementById('m-qty').value);
+            const qtyStr = document.getElementById('m-qty').value;
+            const qty = parseInt(qtyStr);
             const staff = document.getElementById('m-staff-select').value;
             const notes = document.getElementById('m-task').value || "Regular dispatch";
 
             if (editModeId) {
-                // Edit existing
                 const item = historyData.find(i => i.id === editModeId);
                 item.qty = qty;
                 item.staff = staff;
                 item.notes = notes;
             } else {
-                // New dispatch
-                if(!qty || qty <= 0) return alert("Enter quantity.");
+                if(!qtyStr || qty <= 0) return alert("Enter quantity.");
                 historyData.unshift({ 
                     id: Date.now(), 
                     timestamp: new Date().getTime(),
@@ -215,7 +226,7 @@
                     staff, 
                     qty, 
                     notes, 
-                    timeStr: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', hour12: true})
+                    timeStr: new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12: true})
                 });
             }
 
@@ -256,19 +267,16 @@
 
         window.editHistory = (id) => {
             const item = historyData.find(i => i.id === id);
-            
-            // First step: Prompt for Qty as requested
             const newQty = prompt("Edit Qty:", item.qty);
             if (newQty === null) return;
             
-            // Second step: Open modal for Staff Selection & Instructions
             editModeId = id;
             document.getElementById('m-name').innerText = "Editing Order";
             const select = document.getElementById('m-staff-select');
             select.innerHTML = staffData.map(s => `<option value="${s}" ${s === item.staff ? 'selected' : ''}>${s}</option>`).join('');
             
             document.getElementById('m-qty').value = parseInt(newQty);
-            document.getElementById('qty-container').classList.add('hidden'); // Hide qty input since it was prompt-based
+            document.getElementById('qty-container').classList.add('hidden');
             document.getElementById('m-task').value = item.notes;
             
             document.getElementById('focus-modal').classList.add('modal-active');
@@ -280,7 +288,8 @@
         
         setInterval(() => {
             const now = new Date();
-            document.getElementById('header-time').innerText = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+            document.getElementById('header-time').innerText = timeStr;
             document.getElementById('header-day').innerText = now.toLocaleDateString('en-US', {weekday:'short'});
             document.getElementById('header-month').innerText = now.toLocaleDateString('en-US', {month:'short', day:'numeric'}).toUpperCase();
         }, 1000);
