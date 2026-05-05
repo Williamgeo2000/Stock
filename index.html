@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Saaral Stock Management</title>
+    <title>Saaral Stock Management - Live Sync</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -13,8 +13,6 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .product-scroll::-webkit-scrollbar { width: 6px; }
         .product-scroll::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 10px; }
-        
-        /* History Section Font Adjustments */
         .history-text-main { font-size: 1.05rem; } 
         .history-product-title { font-size: 0.95rem; letter-spacing: 0.025em; }
     </style>
@@ -54,8 +52,7 @@
                                 <th class="px-6 py-3 text-right">Action</th>
                             </tr>
                         </thead>
-                        <tbody id="inventory-table" class="divide-y divide-slate-100 cursor-pointer text-sm">
-                        </tbody>
+                        <tbody id="inventory-table" class="divide-y divide-slate-100 cursor-pointer text-sm"></tbody>
                     </table>
                 </div>
             </section>
@@ -65,8 +62,7 @@
                 <span id="history-count" class="text-xs bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-black">0 Entries</span>
             </div>
             
-            <div id="instruction-log" class="space-y-4 px-1 pb-10">
-                </div>
+            <div id="instruction-log" class="space-y-4 px-1 pb-10"></div>
         </main>
     </div>
 
@@ -79,7 +75,6 @@
                 <h2 class="text-3xl font-black text-slate-800 tracking-tighter uppercase">Dispatched</h2>
                 <p class="text-slate-400 font-medium">Order successfully sent to staff</p>
             </div>
-
             <div class="bg-slate-50 rounded-3xl p-8 border border-slate-200 shadow-sm mb-10">
                 <div class="grid grid-cols-2 gap-4 mb-6">
                     <div>
@@ -91,7 +86,6 @@
                         <input type="number" id="target-qty" class="text-xl font-black text-slate-800 bg-transparent border-b-2 border-indigo-200 w-16 text-right focus:border-indigo-500 outline-none">
                     </div>
                 </div>
-
                 <div>
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Instruction Details</label>
                     <div class="bg-white p-4 rounded-xl border border-slate-200 italic text-slate-600 shadow-sm">
@@ -99,12 +93,11 @@
                     </div>
                 </div>
             </div>
-
             <div class="flex flex-col items-center">
                 <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mb-3">
                     <div id="progress-bar" class="bg-indigo-600 h-full w-0 transition-all duration-[3000ms] ease-linear"></div>
                 </div>
-                <p class="text-[10px] font-black text-slate-400 tracking-widest animate-pulse uppercase">Syncing to Staff Handhelds...</p>
+                <p class="text-[10px] font-black text-slate-400 tracking-widest animate-pulse uppercase">Syncing to Cloud & Staff...</p>
             </div>
         </div>
     </div>
@@ -134,14 +127,49 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        // --- FIREBASE CONFIGURATION ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBR3B97-mVJhiok84e3OieC0SFrbjQeIFs",
+            authDomain: "saaral-stock.firebaseapp.com",
+            projectId: "saaral-stock",
+            storageBucket: "saaral-stock.firebasestorage.app",
+            messagingSenderId: "1094921560302",
+            appId: "1:1094921560302:web:ef06a6bd2309b1edbd13ff",
+            databaseURL: "https://saaral-stock-default-rtdb.firebaseio.com" // Ensure this matches your console!
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
         const productNames = ["SILK SAREES", "SAREE", "FANCY SAREE", "COTTON SAREE", "BLOUSE", "BLOUSE BIT", "LINING CLOTH", "LINING BIT", "INSKIRT", "CHUDITHAR", "CHUDITHAR MATERIAL", "FROCK", "MIDI", "GOWN", "WESTERN", "TOPS", "LEGGINGS", "SHAAL", "NIGHTY", "NIGHT SUIT", "NIGHT DRESS", "BRA", "CHIMMIES", "PANTIES", "TIGHTS", "PETTICOAT", "JETTY", "GIFT BOX", "BABY DRESS", "BABY TOWEL", "PILLAIYAR PARIVATTAM", "AMMAN PATTU", "KAVI DHOTI", "BABA SUIT", "TROUSER SHIRT", "BOYS PANT SHIRT", "BOYS SHIRT", "BOYS JEANS PANT", "GENTS SHIRT", "GENTS PANT", "GENTS JEANS PANT", "SHIRTTING", "SUITTING", "SHIRTTING BIT", "SUITTING BIT", "WEDDING DHOTIS SHIRT", "BOYS DHOTIS SHIRT", "DHOTI", "LUNGI", "TOWEL", "SALVAI", "BRIEF", "BANIAN", "TRUNKS", "TRACK SUIT", "PANT 3/4", "SOCKS", "SHORTS", "GLOVES", "BED SHEET", "BED COVER", "PILLOW", "PILLOW COVER", "MAT", "PAAI", "MULL", "KAADA", "KERCHIEF", "CAP", "SAREE FALLS", "BANIAN SET", "BOYS COAT SUIT", "PATTU PAVADAI SET", "DOOR SCREEN", "WINDOW SCREEN", "T-SHIRT", "YOGA SHORTS", "SPORTS BRA", "PATIALA", "PATTU SAREE", "KERALA FANCY SAREE", "STONE WORK SAREE", "NIGHTY MATERIAL", "PANT SET", "SWEATER", "KERALA DHOTHI", "JAMMUKALAM", "BABY BED", "SCREEN PIECE", "NAVAKARAGA PATTU", "PATTI INSKIRT", "MASK", "MOSQUITO NET", "BED", "DHOTIS SET", "GYM VESTS", "RAIN COAT", "PANI KULLA", "TEA CLOTH", "NARIYAL", "IRUMUDI BAG", "DHAVANI", "LEHANGA", "JERKIN", "SKIRT", "PLAZO", "SHAPE WEAR", "JEGGINGS", "TABLE CLOTH", "JOGGERS", "BOYS PANT", "SHOE", "DENIM SHORTS", "DHOTI BELT", "POPLIN CLOTH", "SOFA COVER", "GENTS COAT", "CHRISTMAS DRESS", "CHRISTMAS CAP", "BOTTLE COVER", "SHIMMER", "BED PAAI", "KRISHNA DRESS", "LAB COAT", "BUTTERFLY WINGS", "MATERNITY WEAR", "SPIDERMAN DRESS", "DRY SHEET"];
 
-        // All quantities set to 0 default
         let products = productNames.map((name, i) => ({ id: i, name: name, stock: 0 }));
-        let activeProduct = null;
         let historyData = [];
+        let activeProduct = null;
 
+        // --- REAL-TIME SYNC ---
+        onValue(ref(db, 'saaralStock'), (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                if (data.products) products = data.products;
+                if (data.history) historyData = data.history;
+                updateTable(document.getElementById('search-input').value);
+                renderHistory();
+            }
+        });
+
+        function saveToCloud() {
+            set(ref(db, 'saaralStock'), {
+                products: products,
+                history: historyData
+            });
+        }
+
+        // --- UI LOGIC ---
         function startClock() {
             const timeEl = document.getElementById('header-time');
             const dateEl = document.getElementById('header-date');
@@ -152,7 +180,7 @@
             }, 1000);
         }
 
-        function updateTable(query = "") {
+        window.updateTable = (query = "") => {
             const table = document.getElementById('inventory-table');
             table.innerHTML = "";
             products.filter(p => p.name.toLowerCase().includes(query.toLowerCase())).forEach(p => {
@@ -171,14 +199,14 @@
             });
         }
 
-        function closeModal() { document.getElementById('focus-modal').classList.remove('modal-active'); }
+        window.closeModal = () => { document.getElementById('focus-modal').classList.remove('modal-active'); }
 
         document.getElementById('dispatch-btn').onclick = () => {
             const task = document.getElementById('m-task').value;
-            const newQty = document.getElementById('m-qty').value;
+            const newQty = parseInt(document.getElementById('m-qty').value);
             if(!task) return alert("Please enter an instruction.");
             
-            activeProduct.stock = parseInt(newQty);
+            activeProduct.stock = newQty;
             const timeNow = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
             
             document.getElementById('target-prod').innerText = activeProduct.name;
@@ -188,24 +216,23 @@
             closeModal();
             document.getElementById('main-dashboard').classList.add('hidden-page');
             document.getElementById('success-screen').classList.remove('hidden-page');
-            
             document.getElementById('progress-bar').style.width = '0%';
             setTimeout(() => { document.getElementById('progress-bar').style.width = '100%'; }, 50);
 
             setTimeout(() => {
-                const finalQty = document.getElementById('target-qty').value;
-                activeProduct.stock = parseInt(finalQty);
-
+                const finalQty = parseInt(document.getElementById('target-qty').value);
+                activeProduct.stock = finalQty;
                 historyData.unshift({ id: Date.now(), product: activeProduct.name, instruction: task, time: timeNow, qty: finalQty });
+                
+                saveToCloud(); // SEND TO PC/MOBILE
+                
                 document.getElementById('success-screen').classList.add('hidden-page');
                 document.getElementById('main-dashboard').classList.remove('hidden-page');
                 document.getElementById('m-task').value = "";
-                updateTable();
-                renderHistory();
             }, 3000);
         };
 
-        function renderHistory() {
+        window.renderHistory = () => {
             const log = document.getElementById('instruction-log');
             document.getElementById('history-count').innerText = `${historyData.length} Entries`;
             log.innerHTML = historyData.length ? "" : `<div class="text-center py-6 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 text-sm italic">No instructions issued yet.</div>`;
@@ -228,17 +255,24 @@
             });
         }
 
-        window.deleteEntry = (id) => { if(confirm("Are you sure?")) { historyData = historyData.filter(i => i.id !== id); renderHistory(); } };
+        window.deleteEntry = (id) => { 
+            if(confirm("Are you sure?")) { 
+                historyData = historyData.filter(i => i.id !== id); 
+                saveToCloud(); 
+            } 
+        };
+        
         window.editEntry = (id) => {
             const item = historyData.find(i => i.id === id);
             const newT = prompt("Edit Instruction:", item.instruction);
-            if(newT) { item.instruction = newT; renderHistory(); }
+            if(newT) { 
+                item.instruction = newT; 
+                saveToCloud(); 
+            }
         };
 
         document.getElementById('search-input').oninput = (e) => updateTable(e.target.value);
         startClock();
-        updateTable();
-        renderHistory();
     </script>
 </body>
 </html>
