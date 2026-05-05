@@ -33,7 +33,6 @@
         .date-small { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; opacity: 0.6; letter-spacing: 0.1em; }
         .date-big { font-size: 1.25rem; font-weight: 900; color: #818cf8; }
 
-        /* Increased instruction font size */
         .instruction-text { font-size: 0.85rem; font-weight: 600; line-height: 1.4; }
     </style>
 </head>
@@ -42,7 +41,7 @@
     <div id="confirm-animation" class="confirm-popup">
         <div class="text-center">
             <div class="checkmark-circle mx-auto mb-4"><i class="fas fa-check text-white text-4xl"></i></div>
-            <h2 class="text-white text-xl font-black uppercase tracking-widest">Done</h2>
+            <h2 class="text-white text-xl font-black uppercase tracking-widest">Updated</h2>
         </div>
     </div>
 
@@ -69,9 +68,7 @@
                     <button onclick="toggleSidebar()" class="p-2 text-xl hover:bg-white/10 rounded-lg transition-all">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <div>
-                        <h1 class="text-lg font-black tracking-widest uppercase italic leading-none">Saaral Stock Management</h1>
-                    </div>
+                    <h1 class="text-lg font-black tracking-widest uppercase italic leading-none">Saaral Stock Management</h1>
                 </div>
                 <div class="text-right flex items-center gap-4">
                     <div class="date-container border-r border-white/10 pr-4">
@@ -127,7 +124,7 @@
                     <label class="text-[9px] font-black text-slate-400 uppercase mb-1 block tracking-widest">Assign Staff</label>
                     <select id="m-staff-select" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700"></select>
                 </div>
-                <div class="mb-4">
+                <div class="mb-4" id="qty-container">
                     <label class="text-[9px] font-black text-slate-400 uppercase mb-1 block tracking-widest">Quantity</label>
                     <input type="number" id="m-qty" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-mono font-bold text-2xl" placeholder="0">
                 </div>
@@ -135,7 +132,7 @@
                     <label class="text-[9px] font-black text-slate-400 uppercase mb-1 block tracking-widest">Instruction</label>
                     <textarea id="m-task" rows="2" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs" placeholder="Optional notes..."></textarea>
                 </div>
-                <button id="dispatch-btn" class="w-full py-5 bg-indigo-600 text-white font-black rounded-2xl shadow-lg uppercase tracking-[0.2em] text-xs">Confirm Dispatch</button>
+                <button id="dispatch-btn" class="w-full py-5 bg-indigo-600 text-white font-black rounded-2xl shadow-lg uppercase tracking-[0.2em] text-xs">Confirm</button>
             </div>
         </div>
     </div>
@@ -145,7 +142,7 @@
 
         let historyData = JSON.parse(localStorage.getItem('saaral_final_hist')) || [];
         let staffData = JSON.parse(localStorage.getItem('saaral_final_staff')) || ["Admin"];
-        let activeProduct = null;
+        let editModeId = null;
 
         function sync() {
             localStorage.setItem('saaral_final_hist', JSON.stringify(historyData));
@@ -187,34 +184,47 @@
         }
 
         function openDispatch(name) {
-            activeProduct = name;
+            editModeId = null;
             document.getElementById('m-name').innerText = name;
             const select = document.getElementById('m-staff-select');
             select.innerHTML = staffData.map(s => `<option value="${s}">${s}</option>`).join('');
             document.getElementById('m-qty').value = "";
             document.getElementById('m-task').value = "";
+            document.getElementById('qty-container').classList.remove('hidden');
             document.getElementById('focus-modal').classList.add('modal-active');
         }
 
         document.getElementById('dispatch-btn').onclick = () => {
             const qty = parseInt(document.getElementById('m-qty').value);
             const staff = document.getElementById('m-staff-select').value;
-            if(!qty || qty <= 0) return alert("Enter quantity.");
+            const notes = document.getElementById('m-task').value || "Regular dispatch";
 
+            if (editModeId) {
+                // Edit existing
+                const item = historyData.find(i => i.id === editModeId);
+                item.qty = qty;
+                item.staff = staff;
+                item.notes = notes;
+            } else {
+                // New dispatch
+                if(!qty || qty <= 0) return alert("Enter quantity.");
+                historyData.unshift({ 
+                    id: Date.now(), 
+                    timestamp: new Date().getTime(),
+                    productName: document.getElementById('m-name').innerText, 
+                    staff, 
+                    qty, 
+                    notes, 
+                    timeStr: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', hour12: true})
+                });
+            }
+
+            sync();
             closeModal();
             document.getElementById('confirm-animation').style.display = 'flex';
             setTimeout(() => {
                 document.getElementById('confirm-animation').style.display = 'none';
-                historyData.unshift({ 
-                    id: Date.now(), 
-                    timestamp: new Date().getTime(),
-                    productName: activeProduct, 
-                    staff, 
-                    qty, 
-                    notes: document.getElementById('m-task').value || "Regular dispatch", 
-                    timeStr: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', hour12: true})
-                });
-                sync(); renderHistory();
+                renderHistory();
             }, 800);
         };
 
@@ -238,7 +248,7 @@
                     </div>
                     <div class="flex items-center justify-between bg-slate-50 p-3 rounded-2xl">
                         <p class="instruction-text text-slate-600 italic">"${item.notes}"</p>
-                        <p class="text-sm font-black text-indigo-900 ml-4">QTY: ${item.qty}</p>
+                        <p class="text-sm font-black text-indigo-900 ml-4 whitespace-nowrap">QTY: ${item.qty}</p>
                     </div>
                 </div>`;
             }).join('');
@@ -246,17 +256,22 @@
 
         window.editHistory = (id) => {
             const item = historyData.find(i => i.id === id);
+            
+            // First step: Prompt for Qty as requested
             const newQty = prompt("Edit Qty:", item.qty);
-            if(newQty === null) return;
-            const newStaff = prompt("Edit Staff Name:", item.staff);
-            if(newStaff === null) return;
-            const newNotes = prompt("Edit Instructions:", item.notes);
-            if(newNotes === null) return;
-
-            item.qty = parseInt(newQty) || item.qty;
-            item.staff = newStaff || item.staff;
-            item.notes = newNotes || item.notes;
-            sync(); renderHistory();
+            if (newQty === null) return;
+            
+            // Second step: Open modal for Staff Selection & Instructions
+            editModeId = id;
+            document.getElementById('m-name').innerText = "Editing Order";
+            const select = document.getElementById('m-staff-select');
+            select.innerHTML = staffData.map(s => `<option value="${s}" ${s === item.staff ? 'selected' : ''}>${s}</option>`).join('');
+            
+            document.getElementById('m-qty').value = parseInt(newQty);
+            document.getElementById('qty-container').classList.add('hidden'); // Hide qty input since it was prompt-based
+            document.getElementById('m-task').value = item.notes;
+            
+            document.getElementById('focus-modal').classList.add('modal-active');
         };
 
         window.deleteHistory = (id) => { if(confirm("Delete record?")) { historyData = historyData.filter(i => i.id !== id); sync(); renderHistory(); } };
