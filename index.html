@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Saaral Stock Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -32,9 +32,12 @@
         .date-container { display: flex; flex-direction: column; align-items: flex-end; line-height: 1; }
         .date-small { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; opacity: 0.6; letter-spacing: 0.1em; }
         .date-big { font-size: 1.25rem; font-weight: 900; color: #818cf8; }
+
+        /* Increased instruction font size */
+        .instruction-text { font-size: 0.85rem; font-weight: 600; line-height: 1.4; }
     </style>
 </head>
-<body class="bg-slate-50 font-sans text-slate-900 overflow-x-hidden">
+<body class="bg-slate-50 font-sans text-slate-900 overflow-x-hidden touch-none">
 
     <div id="confirm-animation" class="confirm-popup">
         <div class="text-center">
@@ -116,7 +119,6 @@
     <div id="focus-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 items-center justify-center p-4">
         <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden relative">
             <button onclick="closeModal()" class="absolute top-6 right-8 text-slate-400 hover:text-slate-800 text-3xl font-light leading-none z-10">&times;</button>
-            
             <div class="p-8 bg-slate-50 border-b border-slate-100">
                 <h2 id="m-name" class="text-xl font-black text-slate-800 uppercase italic pr-8"></h2>
             </div>
@@ -235,7 +237,7 @@
                         </div>
                     </div>
                     <div class="flex items-center justify-between bg-slate-50 p-3 rounded-2xl">
-                        <p class="text-[10px] text-slate-500 italic">"${item.notes}"</p>
+                        <p class="instruction-text text-slate-600 italic">"${item.notes}"</p>
                         <p class="text-sm font-black text-indigo-900 ml-4">QTY: ${item.qty}</p>
                     </div>
                 </div>`;
