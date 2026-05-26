@@ -2,299 +2,128 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Saaral Stock Management</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saaral Stock Scanner</title>
     <style>
-        html, body {
-            height: 100%;
-            overflow-x: hidden;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .modal-active { display: flex !important; }
-        .hidden-page { display: none !important; }
-        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-
-        #sidebar { 
-            transition: transform 0.3s ease-in-out; 
-            transform: translateX(-100%); 
-            overscroll-behavior: contain;
-        }
-        #sidebar.open { transform: translateX(0); }
-
-        .confirm-popup {
-            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9);
-            display: none; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(8px);
-        }
-        .checkmark-circle {
-            width: 80px; height: 80px; background: #22c55e; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            animation: scaleUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        @keyframes scaleUp { from { transform: scale(0); } to { transform: scale(1); } }
-
-        .product-scroll { -webkit-overflow-scrolling: touch; }
-        .product-scroll::-webkit-scrollbar { width: 4px; }
-        .product-scroll::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 10px; }
-        
-        .date-container { display: flex; flex-direction: column; align-items: flex-end; line-height: 1; }
-        .date-small { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; opacity: 0.6; letter-spacing: 0.1em; }
-        .date-big { font-size: 1.25rem; font-weight: 900; color: #818cf8; }
-
-        .instruction-text { font-size: 0.85rem; font-weight: 600; line-height: 1.4; }
+        body { font-family: Arial, sans-serif; margin: 15px; background-color: #f4f6f9; color: #333; }
+        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        .btn { background: #007bff; color: white; border: none; padding: 12px; width: 100%; border-radius: 5px; font-size: 16px; cursor: pointer; font-weight: bold; }
+        .btn:active { background: #0056b3; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .label { font-weight: bold; font-size: 11px; color: #777; text-transform: uppercase; letter-spacing: 0.5px; }
+        .value { font-size: 18px; font-weight: bold; margin-bottom: 12px; color: #222; }
+        .hidden { display: none; }
+        .status-connected { color: #28a745; font-weight: bold; text-align: center; margin-top: 0; font-size: 14px; }
+        .error-msg { color: #d9534f; font-weight: bold; text-align: center; margin-top: 10px; font-size: 14px; }
     </style>
 </head>
-<body class="bg-slate-50 font-sans text-slate-900">
+<body>
 
-    <div id="confirm-animation" class="confirm-popup">
-        <div class="text-center">
-            <div class="checkmark-circle mx-auto mb-4"><i class="fas fa-check text-white text-4xl"></i></div>
-            <h2 class="text-white text-xl font-black uppercase tracking-widest">Work Assigned</h2>
+    <div id="connectionScreen" class="card">
+        <h3 style="margin-top:0;">Connect to Shop Server</h3>
+        <label for="serverIp" class="label">Enter Server IP Address:</label>
+        <input type="text" id="serverIp" placeholder="e.g., 192.168.1.5" value="192.168.1.5">
+        <button class="btn" onclick="connectToServer()">Connect to Server</button>
+    </div>
+
+    <div id="appScreen" class="hidden">
+        <div class="card">
+            <p class="status-connected">● Connected to Live Database</p>
+            <label for="qrInput" class="label">Scan or Type Barcode / QR Code:</label>
+            <input type="text" id="qrInput" placeholder="Tap here & scan item..." autofocus oninput="fetchProductDetails(this.value)">
+            <div id="errorLocation" class="error-msg hidden">Item not found in system.</div>
         </div>
-    </div>
 
-    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-50 hidden" onclick="toggleSidebar()"></div>
-    <div id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-indigo-950 text-white z-[60] shadow-2xl p-6">
-        <div class="flex justify-between items-center mb-10">
-            <h2 class="font-black italic text-lg uppercase tracking-tighter">Menu</h2>
-            <button onclick="toggleSidebar()" class="text-3xl text-indigo-300 leading-none">&times;</button>
-        </div>
-        <nav class="space-y-4">
-            <button onclick="switchTab('dispatch')" class="w-full text-left p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition-all font-bold uppercase text-xs flex items-center gap-3">
-                <i class="fas fa-truck-loading"></i> Dispatch
-            </button>
-            <button onclick="switchTab('staff')" class="w-full text-left p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition-all font-bold uppercase text-xs flex items-center gap-3">
-                <i class="fas fa-users"></i> Staff Directory
-            </button>
-        </nav>
-    </div>
+        <div id="productCard" class="card hidden">
+            <div class="label">QR Code / Barcode</div>
+            <div id="resQR" class="value">-</div>
 
-    <div id="app-container" class="min-h-screen flex flex-col">
-        <nav class="bg-indigo-950 text-white p-4 sticky top-0 z-40 shadow-lg">
-            <div class="container mx-auto flex justify-between items-center">
-                <div class="flex items-center gap-4">
-                    <button onclick="toggleSidebar()" class="p-2 text-xl hover:bg-white/10 rounded-lg transition-all">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <h1 class="text-lg font-black tracking-widest uppercase italic leading-none text-white">Saaral Stock Management</h1>
+            <div class="label">Product Name</div>
+            <div id="resName" class="value">-</div>
+
+            <div class="grid">
+                <div>
+                    <div class="label">Current Stock</div>
+                    <div id="resStock" class="value" style="color: #d9534f; font-size: 22px;">0</div>
                 </div>
-                <div class="text-right flex items-center gap-4">
-                    <div class="date-container border-r border-white/10 pr-4">
-                        <div id="header-day" class="date-small">TUE</div>
-                        <div id="header-month" class="date-big">MAY 5</div>
-                    </div>
-                    <div id="header-time" class="text-lg md:text-xl font-mono font-bold text-white leading-none uppercase">00:00:00 AM</div>
+                <div>
+                    <div class="label">Purchase Rate</div>
+                    <div id="resPurchase" class="value">₹0.00</div>
                 </div>
             </div>
-        </nav>
 
-        <main id="view-dispatch" class="container mx-auto p-4 lg:p-6 max-w-2xl flex-1">
-            <section class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden mb-10">
-                <div class="p-4 bg-slate-50 border-b border-slate-100">
-                    <div class="relative">
-                        <input type="text" id="search-input" class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl outline-none text-sm" placeholder="Search products...">
-                        <i class="fas fa-search absolute left-4 top-3.5 text-slate-400"></i>
-                    </div>
+            <div class="grid" style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 15px;">
+                <div>
+                    <div class="label" style="color: #28a745;">Wholesale Rate</div>
+                    <div id="resWholesale" class="value" style="color: #28a745; font-size: 24px;">₹0.00</div>
                 </div>
-                <div class="overflow-x-auto max-h-[400px] product-scroll overflow-y-auto">
-                    <table class="w-full text-left">
-                        <tbody id="inventory-table" class="divide-y divide-slate-50"></tbody>
-                    </table>
+                <div>
+                    <div class="label" style="color: #007bff;">Retail Sale Rate</div>
+                    <div id="resSale" class="value" style="color: #007bff; font-size: 24px;">₹0.00</div>
                 </div>
-            </section>
-
-            <div class="border-t border-slate-200 pt-8">
-                <h3 class="text-xs font-black text-slate-500 uppercase tracking-[0.2em] mb-6 px-2">Live Activity</h3>
-                <div id="instruction-log" class="flex flex-col gap-4 pb-20"></div>
-            </div>
-        </main>
-
-        <main id="view-staff" class="container mx-auto p-4 lg:p-6 max-w-xl hidden flex-1">
-            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 mb-6 text-center">
-                <h3 class="font-black uppercase text-[10px] mb-4 tracking-widest text-indigo-600">Add Staff Member</h3>
-                <div class="flex gap-2">
-                    <input type="text" id="staff-name-input" class="flex-1 p-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none text-sm" placeholder="Enter name...">
-                    <button onclick="addStaff()" class="bg-indigo-600 text-white px-6 rounded-2xl font-black uppercase text-[10px]">Add</button>
-                </div>
-            </div>
-            <div id="staff-list" class="grid gap-3"></div>
-        </main>
-    </div>
-
-    <div id="focus-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 items-center justify-center p-4">
-        <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden relative">
-            <button onclick="closeModal()" class="absolute top-6 right-8 text-slate-400 hover:text-slate-800 text-3xl font-light leading-none z-10">&times;</button>
-            <div class="p-8 bg-slate-50 border-b border-slate-100">
-                <h2 id="m-name" class="text-xl font-black text-slate-800 uppercase italic pr-8"></h2>
-            </div>
-            <div class="p-8">
-                <div class="mb-4">
-                    <label class="text-[9px] font-black text-slate-400 uppercase mb-1 block tracking-widest">Assign Staff</label>
-                    <select id="m-staff-select" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700"></select>
-                </div>
-                <div class="mb-4" id="qty-container">
-                    <label class="text-[9px] font-black text-slate-400 uppercase mb-1 block tracking-widest">Quantity</label>
-                    <input type="number" id="m-qty" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-mono font-bold text-2xl" placeholder="0">
-                </div>
-                <div class="mb-6">
-                    <label class="text-[9px] font-black text-slate-400 uppercase mb-1 block tracking-widest">Instruction</label>
-                    <textarea id="m-task" rows="2" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs" placeholder="Optional notes..."></textarea>
-                </div>
-                <button id="dispatch-btn" class="w-full py-5 bg-indigo-600 text-white font-black rounded-2xl shadow-lg uppercase tracking-[0.2em] text-xs">Confirm Dispatch</button>
             </div>
         </div>
     </div>
 
     <script>
-        const productNames = ["SILK SAREES", "SAREE", "FANCY SAREE", "COTTON SAREE", "BLOUSE", "BLOUSE BIT", "LINING CLOTH", "LINING BIT", "INSKIRT", "CHUDITHAR", "CHUDITHAR MATERIAL", "FROCK", "MIDI", "GOWN", "WESTERN", "TOPS", "LEGGINGS", "SHAAL", "NIGHTY", "NIGHT SUIT", "NIGHT DRESS", "BRA", "CHIMMIES", "PANTIES", "TIGHTS", "PETTICOAT", "JETTY", "GIFT BOX", "BABY DRESS", "BABY TOWEL", "PILLAIYAR PARIVATTAM", "AMMAN PATTU", "KAVI DHOTI", "BABA SUIT", "TROUSER SHIRT", "BOYS PANT SHIRT", "BOYS SHIRT", "BOYS JEANS PANT", "GENTS SHIRT", "GENTS PANT", "GENTS JEANS PANT", "SHIRTTING", "SUITTING", "SHIRTTING BIT", "SUITTING BIT", "WEDDING DHOTIS SHIRT", "BOYS DHOTIS SHIRT", "DHOTI", "LUNGI", "TOWEL", "SALVAI", "BRIEF", "BANIAN", "TRUNKS", "TRACK SUIT", "PANT 3/4", "SOCKS", "SHORTS", "GLOVES", "BED SHEET", "BED COVER", "PILLOW", "PILLOW COVER", "MAT", "PAAI", "MULL", "KAADA", "KERCHIEF", "CAP", "SAREE FALLS", "BANIAN SET", "BOYS COAT SUIT", "PATTU PAVADAI SET", "DOOR SCREEN", "WINDOW SCREEN", "T-SHIRT", "YOGA SHORTS", "SPORTS BRA", "PATIALA", "PATTU SAREE", "KERALA FANCY SAREE", "STONE WORK SAREE", "NIGHTY MATERIAL", "PANT SET", "SWEATER", "KERALA DHOTHI", "JAMMUKALAM", "BABY BED", "SCREEN PIECE", "NAVAKARAGA PATTU", "PATTI INSKIRT", "MASK", "MOSQUITO NET", "BED", "DHOTIS SET", "GYM VESTS", "RAIN COAT", "PANI KULLA", "TEA CLOTH", "NARIYAL", "IRUMUDI BAG", "DHAVANI", "LEHANGA", "JERKIN", "SKIRT", "PLAZO", "SHAPE WEAR", "JEGGINGS", "TABLE CLOTH", "JOGGERS", "BOYS PANT", "SHOE", "DENIM SHORTS", "DHOTI BELT", "POPLIN CLOTH", "SOFA COVER", "GENTS COAT", "CHRISTMAS DRESS", "CHRISTMAS CAP", "BOTTLE COVER", "SHIMMER", "BED PAAI", "KRISHNA DRESS", "LAB COAT", "BUTTERFLY WINGS", "MATERNITY WEAR", "SPIDERMAN DRESS", "DRY SHEET"];
+        let serverUrl = "";
 
-        let historyData = JSON.parse(localStorage.getItem('saaral_final_hist')) || [];
-        let staffData = JSON.parse(localStorage.getItem('saaral_final_staff')) || ["Admin"];
-        let editModeId = null;
+        async function connectToServer() {
+            const ip = document.getElementById('serverIp').value.trim();
+            if(!ip) return alert("Please enter a valid IP address.");
 
-        function sync() {
-            localStorage.setItem('saaral_final_hist', JSON.stringify(historyData));
-            localStorage.setItem('saaral_final_staff', JSON.stringify(staffData));
+            serverUrl = `http://${ip}:3000`;
+
+            try {
+                const response = await fetch(`${serverUrl}/api/status`);
+                if(response.ok) {
+                    alert("Successfully connected to Server Database!");
+                    document.getElementById('connectionScreen').classList.add('hidden');
+                    document.getElementById('appScreen').classList.remove('hidden');
+                    document.getElementById('qrInput').focus();
+                } else {
+                    alert("Connected to PC network, but database connection rejected.");
+                }
+            } catch (error) {
+                alert("Connection failed! Make sure you are on Shop Wi-Fi, Node app is running on PC, and IP is correct.");
+            }
         }
 
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
-            document.getElementById('sidebar-overlay').classList.toggle('hidden');
-        }
-
-        function switchTab(tab) {
-            document.getElementById('view-dispatch').classList.toggle('hidden', tab !== 'dispatch');
-            document.getElementById('view-staff').classList.toggle('hidden', tab !== 'staff');
-            toggleSidebar();
-            if(tab === 'staff') renderStaff();
-            window.scrollTo(0,0);
-        }
-
-        function addStaff() {
-            const name = document.getElementById('staff-name-input').value.trim();
-            if(name) { staffData.push(name); document.getElementById('staff-name-input').value = ""; sync(); renderStaff(); }
-        }
-
-        function removeStaff(index) { staffData.splice(index, 1); sync(); renderStaff(); }
-
-        function renderStaff() {
-            const list = document.getElementById('staff-list');
-            list.innerHTML = staffData.map((s, i) => `<div class="bg-white p-4 rounded-2xl flex justify-between items-center border border-slate-100 shadow-sm"><span class="font-bold text-sm text-slate-700">${s}</span><button onclick="removeStaff(${i})" class="text-red-400 p-2"><i class="fas fa-trash"></i></button></div>`).join('');
-        }
-
-        function updateTable(query = "") {
-            const table = document.getElementById('inventory-table');
-            table.innerHTML = productNames.filter(n => n.toLowerCase().includes(query.toLowerCase())).map(name => `
-                <tr class="hover:bg-slate-50 cursor-pointer" onclick="openDispatch('${name}')">
-                    <td class="px-6 py-5 font-bold text-slate-800 uppercase text-xs tracking-wide">${name}</td>
-                    <td class="px-6 py-5 text-right"><button class="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-[9px] font-black uppercase">Assign</button></td>
-                </tr>
-            `).join('');
-        }
-
-        function openDispatch(name) {
-            editModeId = null;
-            document.getElementById('m-name').innerText = name;
-            const select = document.getElementById('m-staff-select');
-            select.innerHTML = staffData.map(s => `<option value="${s}">${s}</option>`).join('');
-            document.getElementById('m-qty').value = "";
-            document.getElementById('m-task').value = "";
-            document.getElementById('qty-container').classList.remove('hidden');
-            document.getElementById('focus-modal').classList.add('modal-active');
-        }
-
-        document.getElementById('dispatch-btn').onclick = () => {
-            const qtyStr = document.getElementById('m-qty').value;
-            const qty = parseInt(qtyStr);
-            const staff = document.getElementById('m-staff-select').value;
-            const notes = document.getElementById('m-task').value || "Regular dispatch";
-
-            if (editModeId) {
-                const item = historyData.find(i => i.id === editModeId);
-                item.qty = qty;
-                item.staff = staff;
-                item.notes = notes;
-            } else {
-                if(!qtyStr || qty <= 0) return alert("Enter quantity.");
-                historyData.unshift({ 
-                    id: Date.now(), 
-                    timestamp: new Date().getTime(),
-                    productName: document.getElementById('m-name').innerText, 
-                    staff, 
-                    qty, 
-                    notes, 
-                    timeStr: new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12: true})
-                });
+        async function fetchProductDetails(qrCode) {
+            const errorDiv = document.getElementById('errorLocation');
+            const productCard = document.getElementById('productCard');
+            
+            if(!qrCode || qrCode.length < 2) {
+                productCard.classList.add('hidden');
+                errorDiv.classList.add('hidden');
+                return;
             }
 
-            sync();
-            closeModal();
-            document.getElementById('confirm-animation').style.display = 'flex';
-            setTimeout(() => {
-                document.getElementById('confirm-animation').style.display = 'none';
-                renderHistory();
-            }, 800);
-        };
-
-        function renderHistory() {
-            const log = document.getElementById('instruction-log');
-            const now = new Date().getTime();
-            log.innerHTML = historyData.map(item => {
-                const isLate = (now - item.timestamp) > (5 * 24 * 60 * 60 * 1000);
-                return `
-                <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm fade-in relative overflow-hidden">
-                    ${isLate ? '<div class="absolute top-0 right-0 bg-red-600 text-white text-[8px] font-black px-3 py-1 uppercase">Late Order</div>' : ''}
-                    <div class="flex justify-between items-start mb-3">
-                        <div>
-                            <p class="text-[9px] font-black text-indigo-600 uppercase tracking-tighter">${item.timeStr} • ${item.staff}</p>
-                            <h4 class="font-black text-slate-800 uppercase text-sm leading-tight">${item.productName}</h4>
-                        </div>
-                        <div class="flex gap-1">
-                            <button onclick="editHistory(${item.id})" class="text-slate-300 hover:text-indigo-600 p-2"><i class="fas fa-pencil-alt text-xs"></i></button>
-                            <button onclick="deleteHistory(${item.id})" class="text-slate-300 hover:text-red-600 p-2"><i class="fas fa-trash-alt text-xs"></i></button>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between bg-slate-50 p-3 rounded-2xl">
-                        <p class="instruction-text text-slate-600 italic">"${item.notes}"</p>
-                        <p class="text-sm font-black text-indigo-900 ml-4 whitespace-nowrap">QTY: ${item.qty}</p>
-                    </div>
-                </div>`;
-            }).join('');
+            try {
+                const response = await fetch(`${serverUrl}/api/product?qr=${encodeURIComponent(qrCode)}`);
+                
+                if(response.status === 404) {
+                    errorDiv.classList.remove('hidden');
+                    productCard.classList.add('hidden');
+                    return;
+                }
+                
+                const data = await response.json();
+                errorDiv.classList.add('hidden');
+                
+                document.getElementById('resQR').innerText = data.QRCode || '-';
+                document.getElementById('resName').innerText = data.ItemName || '-';
+                document.getElementById('resStock').innerText = data.StockQuantity || '0';
+                document.getElementById('resPurchase').innerText = "₹" + parseFloat(data.PurchaseRate || 0).toFixed(2);
+                document.getElementById('resWholesale').innerText = "₹" + parseFloat(data.WholesaleRate || 0).toFixed(2);
+                document.getElementById('resSale').innerText = "₹" + parseFloat(data.SaleRate || 0).toFixed(2);
+                
+                productCard.classList.remove('hidden');
+            } catch (error) {
+                console.error("Network read error:", error);
+            }
         }
-
-        window.editHistory = (id) => {
-            const item = historyData.find(i => i.id === id);
-            const newQty = prompt("Edit Qty:", item.qty);
-            if (newQty === null) return;
-            
-            editModeId = id;
-            document.getElementById('m-name').innerText = "Editing Order";
-            const select = document.getElementById('m-staff-select');
-            select.innerHTML = staffData.map(s => `<option value="${s}" ${s === item.staff ? 'selected' : ''}>${s}</option>`).join('');
-            
-            document.getElementById('m-qty').value = parseInt(newQty);
-            document.getElementById('qty-container').classList.add('hidden');
-            document.getElementById('m-task').value = item.notes;
-            
-            document.getElementById('focus-modal').classList.add('modal-active');
-        };
-
-        window.deleteHistory = (id) => { if(confirm("Delete record?")) { historyData = historyData.filter(i => i.id !== id); sync(); renderHistory(); } };
-        function closeModal() { document.getElementById('focus-modal').classList.remove('modal-active'); }
-        document.getElementById('search-input').oninput = (e) => updateTable(e.target.value);
-        
-        setInterval(() => {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-            document.getElementById('header-time').innerText = timeStr;
-            document.getElementById('header-day').innerText = now.toLocaleDateString('en-US', {weekday:'short'});
-            document.getElementById('header-month').innerText = now.toLocaleDateString('en-US', {month:'short', day:'numeric'}).toUpperCase();
-        }, 1000);
-
-        updateTable(); renderHistory();
     </script>
 </body>
 </html>
