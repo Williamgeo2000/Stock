@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Saaral Stock Management</title>
+    
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Saaral Stock">
+    <meta name="apple-mobile-web-app-title" content="Saaral Stock">
+    <meta name="theme-color" content="#1e1b4b">
+
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIlNhYXJhbCBTdG9jayBNYW5hZ2VtZW50IiwKICAic2hvcnRfbmFtZSI6ICJTYWFyYWwgU3RvY2siLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzFmMjkzNyIsCiAgInRoZW1lX2NvbG9yIjogIiMxZTFiNGIiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJodHRwczovL2Nkbi1pY29ucy1wbmcuZmxhdGljb24uY29tLzUxMi83MDcvNzA3ODU0LnBuZyIsCiAgICAgICJzaXplcyI6ICI1MTJ4NTEyIiwKICAgICAgInR5cGUiOiAiaW1hZ2UvcG5nIiwKICAgICAgInB1cnBvc2UiOiAiYW55IG1hc2thYmxlIigKICAgIH0KICBdCn0=">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -11,6 +20,7 @@
             height: 100%;
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain; 
         }
 
         .modal-active { display: flex !important; }
@@ -47,7 +57,7 @@
         .instruction-text { font-size: 0.85rem; font-weight: 600; line-height: 1.4; }
     </style>
 </head>
-<body class="bg-slate-50 font-sans text-slate-900">
+<body class="bg-slate-50 font-sans text-slate-900 select-none">
 
     <div id="confirm-animation" class="confirm-popup">
         <div class="text-center">
@@ -79,7 +89,7 @@
                     <button onclick="toggleSidebar()" class="p-2 text-xl hover:bg-white/10 rounded-lg transition-all">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <h1 class="text-lg font-black tracking-widest uppercase italic leading-none text-white">Saaral Stock Management</h1>
+                    <h1 class="text-lg font-black tracking-widest uppercase italic leading-none text-white">Saaral Stock</h1>
                 </div>
                 <div class="text-right flex items-center gap-4">
                     <div class="date-container border-r border-white/10 pr-4">
@@ -149,6 +159,13 @@
     </div>
 
     <script>
+        // Dummy Service Worker to satisfy Android installation criteria completely inline
+        if ('serviceWorker' in navigator) {
+            const swCode = `self.addEventListener('fetch', function(e) { /* Real app passthrough */ });`;
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            navigator.serviceWorker.register(URL.createObjectURL(blob));
+        }
+
         const productNames = ["SILK SAREES", "SAREE", "FANCY SAREE", "COTTON SAREE", "BLOUSE", "BLOUSE BIT", "LINING CLOTH", "LINING BIT", "INSKIRT", "CHUDITHAR", "CHUDITHAR MATERIAL", "FROCK", "MIDI", "GOWN", "WESTERN", "TOPS", "LEGGINGS", "SHAAL", "NIGHTY", "NIGHT SUIT", "NIGHT DRESS", "BRA", "CHIMMIES", "PANTIES", "TIGHTS", "PETTICOAT", "JETTY", "GIFT BOX", "BABY DRESS", "BABY TOWEL", "PILLAIYAR PARIVATTAM", "AMMAN PATTU", "KAVI DHOTI", "BABA SUIT", "TROUSER SHIRT", "BOYS PANT SHIRT", "BOYS SHIRT", "BOYS JEANS PANT", "GENTS SHIRT", "GENTS PANT", "GENTS JEANS PANT", "SHIRTTING", "SUITTING", "SHIRTTING BIT", "SUITTING BIT", "WEDDING DHOTIS SHIRT", "BOYS DHOTIS SHIRT", "DHOTI", "LUNGI", "TOWEL", "SALVAI", "BRIEF", "BANIAN", "TRUNKS", "TRACK SUIT", "PANT 3/4", "SOCKS", "SHORTS", "GLOVES", "BED SHEET", "BED COVER", "PILLOW", "PILLOW COVER", "MAT", "PAAI", "MULL", "KAADA", "KERCHIEF", "CAP", "SAREE FALLS", "BANIAN SET", "BOYS COAT SUIT", "PATTU PAVADAI SET", "DOOR SCREEN", "WINDOW SCREEN", "T-SHIRT", "YOGA SHORTS", "SPORTS BRA", "PATIALA", "PATTU SAREE", "KERALA FANCY SAREE", "STONE WORK SAREE", "NIGHTY MATERIAL", "PANT SET", "SWEATER", "KERALA DHOTHI", "JAMMUKALAM", "BABY BED", "SCREEN PIECE", "NAVAKARAGA PATTU", "PATTI INSKIRT", "MASK", "MOSQUITO NET", "BED", "DHOTIS SET", "GYM VESTS", "RAIN COAT", "PANI KULLA", "TEA CLOTH", "NARIYAL", "IRUMUDI BAG", "DHAVANI", "LEHANGA", "JERKIN", "SKIRT", "PLAZO", "SHAPE WEAR", "JEGGINGS", "TABLE CLOTH", "JOGGERS", "BOYS PANT", "SHOE", "DENIM SHORTS", "DHOTI BELT", "POPLIN CLOTH", "SOFA COVER", "GENTS COAT", "CHRISTMAS DRESS", "CHRISTMAS CAP", "BOTTLE COVER", "SHIMMER", "BED PAAI", "KRISHNA DRESS", "LAB COAT", "BUTTERFLY WINGS", "MATERNITY WEAR", "SPIDERMAN DRESS", "DRY SHEET"];
 
         let historyData = JSON.parse(localStorage.getItem('saaral_final_hist')) || [];
